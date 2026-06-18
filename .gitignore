@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Environment Variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Migrations (optional)
+# **/migrations/*.py
+# !**/migrations/__init__.py
+
+# Docker
+docker-data/
+postgres-data/
+
+# Redis dump
+dump.rdb
+
+# Celery
+celerybeat-schedule
+
+# Build
+dist/
+build/
+*.egg-info/
