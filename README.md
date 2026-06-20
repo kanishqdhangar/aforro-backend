@@ -283,7 +283,7 @@ Benefits:
 
 ## API Documentation
 
-InteractiveSwagger UI:
+Interactive Swagger UI:
 http://localhost:8000/api/docs/
 
 OpenAPI Schema:
