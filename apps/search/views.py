@@ -7,20 +7,43 @@ from apps.products.models import Product
 from .serializers import (
     ProductSearchSerializer
 )
-
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-class ProductSearchAPIView(
-    ListAPIView
-):
+class ProductSearchAPIView(APIView):
 
-    serializer_class = (
-        ProductSearchSerializer
-    )
+    def get(self, request):
 
-    def get_queryset(self):
+        cache_key = (
+            "product_search:"
+            + request.get_full_path()
+        )
+
+        cached_data = cache.get(cache_key)
+
+        if cached_data is not None:
+            return Response(cached_data)
+
+        queryset = self.get_queryset(request)
+
+        serializer = ProductSearchSerializer(
+            queryset,
+            many=True
+        )
+
+        data = serializer.data
+
+        cache.set(
+            cache_key,
+            data,
+            timeout=300
+        )
+
+        return Response(data)
+
+    def get_queryset(self, request):
 
         queryset = (
             Product.objects
@@ -28,25 +51,25 @@ class ProductSearchAPIView(
             .all()
         )
 
-        q = self.request.GET.get("q")
+        q = request.GET.get("q")
 
-        category = self.request.GET.get(
+        category = request.GET.get(
             "category"
         )
 
-        min_price = self.request.GET.get(
+        min_price = request.GET.get(
             "min_price"
         )
 
-        max_price = self.request.GET.get(
+        max_price = request.GET.get(
             "max_price"
         )
 
-        store_id = self.request.GET.get(
+        store_id = request.GET.get(
             "store_id"
         )
 
-        sort = self.request.GET.get(
+        sort = request.GET.get(
             "sort"
         )
 
@@ -103,14 +126,7 @@ class ProductSearchAPIView(
                 "-title"
             )
 
-        queryset = queryset.annotate(
-            available_quantity=Sum(
-                "inventory__quantity"
-            )
-        )
-
         return queryset
-
 
 class ProductSuggestAPIView(APIView):
 
