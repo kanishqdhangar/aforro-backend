@@ -11,6 +11,7 @@ from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .rate_limit import is_rate_limited
 
 class ProductSearchAPIView(APIView):
 
@@ -73,11 +74,15 @@ class ProductSearchAPIView(APIView):
             "sort"
         )
 
+        in_stock = request.GET.get("in_stock")
+
         if q:
             queryset = queryset.filter(
                 Q(title__icontains=q)
                 |
                 Q(description__icontains=q)
+                |
+                Q(category__name__icontains=q)
             )
 
         if category:
@@ -126,12 +131,43 @@ class ProductSearchAPIView(APIView):
                 "-title"
             )
 
+        if in_stock == "true":
+            queryset = queryset.filter(
+                available_quantity__gt=0
+            )
+
         return queryset
 
 class ProductSuggestAPIView(APIView):
+    def get_client_ip(
+        self,
+        request
+    ):
+        x_forwarded_for = request.META.get(
+            "HTTP_X_FORWARDED_FOR"
+        )
 
+        if x_forwarded_for:
+            return x_forwarded_for.split(",")[0]
+
+        return request.META.get(
+            "REMOTE_ADDR"
+        )
     def get(self, request):
+        ip_address = self.get_client_ip(
+            request
+        )
 
+        if is_rate_limited(
+            ip_address
+        ):
+            return Response(
+                {
+                    "detail":
+                    "Rate limit exceeded. Try again later."
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
         q = request.GET.get("q", "").strip()
 
         if len(q) < 3:
