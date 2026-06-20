@@ -130,7 +130,8 @@ class ProductSearchAPIView(APIView):
             queryset = queryset.order_by(
                 "-title"
             )
-
+        elif sort == "newest":
+            queryset = queryset.order_by("-created_at")
         if in_stock == "true":
             queryset = queryset.filter(
                 available_quantity__gt=0
