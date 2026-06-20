@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: Aforro Backend API
+  version: 1.0.0
+  description: Inventory and Order Management Backend
+paths:
+  /api/schema/:
+    get:
+      operationId: api_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/search/products/:
+    get:
+      operationId: api_search_products_list
+      description: Search products using filters and pagination.
+      summary: Search Products
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: in_stock
+        schema:
+          type: boolean
+      - in: query
+        name: max_price
+        schema:
+          type: number
+          format: double
+      - in: query
+        name: min_price
+        schema:
+          type: number
+          format: double
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+      - in: query
+        name: sort
+        schema:
+          type: string
+      - in: query
+        name: store_id
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductSearch'
+          description: ''
+  /api/search/suggest/:
+    get:
+      operationId: api_search_suggest_retrieve
+      description: Autocomplete suggestions for products.
+      summary: Product Suggestions
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSuggestResponse'
+          description: ''
+  /orders/:
+    post:
+      operationId: orders_create
+      description: Create a new order for a store.
+      summary: Create Order
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreateResponse'
+          description: ''
+  /stores/{store_id}/inventory/:
+    get:
+      operationId: stores_inventory_list
+      description: Return inventory for a specific store.
+      summary: Store Inventory
+      parameters:
+      - in: path
+        name: store_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - stores
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryList'
+          description: ''
+  /stores/{store_id}/orders/:
+    get:
+      operationId: stores_orders_list
+      description: Return all orders for a store.
+      summary: List Store Orders
+      parameters:
+      - in: path
+        name: store_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - stores
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderList'
+          description: ''
+components:
+  schemas:
+    InventoryList:
+      type: object
+      properties:
+        title:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        category:
+          type: string
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - category
+      - price
+      - title
+    OrderCreate:
+      type: object
+      properties:
+        store_id:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemCreate'
+      required:
+      - items
+      - store_id
+    OrderCreateResponse:
+      type: object
+      properties:
+        order_id:
+          type: integer
+        status:
+          type: string
+      required:
+      - order_id
+      - status
+    OrderItemCreate:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        quantity_requested:
+          type: integer
+          minimum: 1
+      required:
+      - product_id
+      - quantity_requested
+    OrderList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        total_items:
+          type: integer
+      required:
+      - created_at
+      - id
+      - total_items
+    ProductSearch:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        category:
+          type: string
+        available_quantity:
+          type: integer
+      required:
+      - available_quantity
+      - category
+      - id
+      - price
+      - title
+    ProductSuggestResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: string
+      required:
+      - results
+    StatusEnum:
+      enum:
+      - PENDING
+      - CONFIRMED
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `CONFIRMED` - Confirmed
+        * `REJECTED` - Rejected
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

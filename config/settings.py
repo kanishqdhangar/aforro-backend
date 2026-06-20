@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'apps.stores',
     'apps.orders',
     'apps.search',
-    'apps.products'
+    'apps.products',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -146,4 +147,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS":
         "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS":
+        "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Aforro Backend API",
+    "DESCRIPTION": "Inventory and Order Management Backend",
+    "VERSION": "1.0.0",
 }

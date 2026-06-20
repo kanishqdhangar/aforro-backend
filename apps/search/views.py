@@ -13,6 +13,27 @@ from rest_framework.response import Response
 from rest_framework import status
 from .rate_limit import is_rate_limited
 from rest_framework.pagination import PageNumberPagination
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    inline_serializer,
+)
+from rest_framework import serializers
+@extend_schema(
+    summary="Search Products",
+    description="Search products using filters and pagination.",
+    parameters=[
+        OpenApiParameter("q", str),
+        OpenApiParameter("category", str),
+        OpenApiParameter("min_price", float),
+        OpenApiParameter("max_price", float),
+        OpenApiParameter("store_id", int),
+        OpenApiParameter("sort", str),
+        OpenApiParameter("in_stock", bool),
+        OpenApiParameter("page", int),
+    ],
+    responses=ProductSearchSerializer(many=True),
+)
 class ProductSearchAPIView(APIView):
 
     def get(self, request):
@@ -153,6 +174,23 @@ class ProductSearchAPIView(APIView):
 
         return queryset
 
+@extend_schema(
+    summary="Product Suggestions",
+    description="Autocomplete suggestions for products.",
+    parameters=[
+        OpenApiParameter("q", str),
+    ],
+    responses={
+        200: inline_serializer(
+            name="ProductSuggestResponse",
+            fields={
+                "results": serializers.ListField(
+                    child=serializers.CharField()
+                )
+            },
+        )
+    },
+)
 class ProductSuggestAPIView(APIView):
     def get_client_ip(
         self,

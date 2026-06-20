@@ -21,6 +21,26 @@ from apps.stores.models import (
 from apps.products.models import Product
 
 from .tasks import send_low_stock_alert
+
+from drf_spectacular.utils import (
+    extend_schema,
+    inline_serializer,
+)
+from rest_framework import serializers
+@extend_schema(
+    summary="Create Order",
+    description="Create a new order for a store.",
+    request=OrderCreateSerializer,
+    responses={
+        201: inline_serializer(
+            name="OrderCreateResponse",
+            fields={
+                "order_id": serializers.IntegerField(),
+                "status": serializers.CharField(),
+            },
+        )
+    },
+)
 class CreateOrderAPIView(APIView):
 
     @transaction.atomic
@@ -151,7 +171,11 @@ class CreateOrderAPIView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
-
+@extend_schema(
+    summary="List Store Orders",
+    description="Return all orders for a store.",
+    responses=OrderListSerializer(many=True),
+)
 class StoreOrdersAPIView(APIView):
 
     def get(self, request, store_id):

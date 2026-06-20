@@ -6,7 +6,12 @@ from .serializers import (
     InventoryListSerializer
 )
 
-
+from drf_spectacular.utils import extend_schema
+@extend_schema(
+    summary="Store Inventory",
+    description="Return inventory for a specific store.",
+    responses=InventoryListSerializer(many=True),
+)
 class StoreInventoryAPIView(APIView):
 
     def get(self, request, store_id):

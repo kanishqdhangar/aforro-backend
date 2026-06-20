@@ -281,6 +281,14 @@ Benefits:
 
 # API Endpoints
 
+## API Documentation
+
+InteractiveSwagger UI:
+http://localhost:8000/api/docs/
+
+OpenAPI Schema:
+http://localhost:8000/api/schema/
+
 ## Create Order
 
 ### Endpoint
