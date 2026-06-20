@@ -20,7 +20,7 @@ from apps.stores.models import (
 
 from apps.products.models import Product
 
-
+from .tasks import send_low_stock_alert
 class CreateOrderAPIView(APIView):
 
     @transaction.atomic
@@ -124,7 +124,13 @@ class CreateOrderAPIView(APIView):
             inventory.save(
                 update_fields=["quantity"]
             )
+            if inventory.quantity < 10:
 
+                send_low_stock_alert.delay(
+                    inventory.store.name,
+                    inventory.product.title,
+                    inventory.quantity
+                )
             OrderItem.objects.create(
                 order=order,
                 product_id=item["product_id"],
