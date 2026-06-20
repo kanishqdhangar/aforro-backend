@@ -48,4 +48,4 @@ class Inventory(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.store.name} - {self.product.name}"
+        return f"{self.store.name} - {self.product.title}"
