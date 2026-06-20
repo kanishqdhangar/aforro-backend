@@ -53,8 +53,13 @@ class ProductSearchAPITest(APITestCase):
             status.HTTP_200_OK,
         )
 
+        self.assertIn(
+            "results",
+            response.data
+        )
+
         self.assertGreater(
-            len(response.data),
+            len(response.data["results"]),
             0,
         )
 
@@ -85,7 +90,12 @@ class ProductSearchAPITest(APITestCase):
         )
 
         self.assertEqual(
-            len(response.data),
+            response.data["count"],
+            1,
+        )
+
+        self.assertEqual(
+            len(response.data["results"]),
             1,
         )
 

@@ -4,7 +4,7 @@ A scalable inventory and order management backend built using Django, PostgreSQL
 
 ---
 
-## Overview
+# Overview
 
 This project implements a backend system for managing products, stores, inventory, and order processing.
 
@@ -22,35 +22,39 @@ The system supports:
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-### Backend
+## Backend
 
-* Django 5
+* Django 5.2
 * Django REST Framework
 
-### Database
+## Database
 
 * PostgreSQL
 
-### Caching & Messaging
+## Caching & Messaging
 
 * Redis
 * Celery
 
-### Containerization
+## Containerization
 
 * Docker
 * Docker Compose
 
-### Testing
+## Runtime
+
+* Python 3.11
+
+## Testing
 
 * Django Test Framework
 * DRF APITestCase
 
 ---
 
-## Architecture
+# Architecture
 
 ```text
 Client
@@ -70,22 +74,22 @@ PostgreSQL           Redis
 
 ---
 
-## Features
+# Features
 
-### Product Management
+## Product Management
 
 * Product categories
 * Product catalog
 * Price tracking
 * Inventory availability
 
-### Store Management
+## Store Management
 
 * Multiple stores
 * Store-specific inventory
 * Inventory tracking per product
 
-### Order Processing
+## Order Processing
 
 * Order creation endpoint
 * Inventory validation
@@ -93,7 +97,7 @@ PostgreSQL           Redis
 * Row-level locking using `select_for_update`
 * Automatic order confirmation or rejection
 
-### Product Search
+## Product Search
 
 Supports:
 
@@ -104,8 +108,9 @@ Supports:
 * Store filtering
 * In-stock filtering
 * Sorting options
+* Pagination
 
-### Product Suggestions
+## Product Suggestions
 
 Autocomplete endpoint with:
 
@@ -115,17 +120,16 @@ Autocomplete endpoint with:
 
 ---
 
-## Database Models
+# Database Models
 
-### Category
+## Category
 
 ```text
 id
 name
-created_at
 ```
 
-### Product
+## Product
 
 ```text
 id
@@ -133,29 +137,26 @@ category
 title
 description
 price
-created_at
 ```
 
-### Store
+## Store
 
 ```text
 id
 name
 location
-created_at
 ```
 
-### Inventory
+## Inventory
 
 ```text
 id
 store
 product
 quantity
-updated_at
 ```
 
-### Order
+## Order
 
 ```text
 id
@@ -164,7 +165,7 @@ status
 created_at
 ```
 
-### OrderItem
+## OrderItem
 
 ```text
 id
@@ -175,11 +176,11 @@ quantity_requested
 
 ---
 
-## Redis Integration
+# Redis Integration
 
-### Product Search Caching
+## Product Search Caching
 
-Search results are cached using Redis.
+Search responses are cached in Redis for 300 seconds.
 
 Cache key example:
 
@@ -191,7 +192,13 @@ Benefits:
 
 * Reduced database load
 * Faster repeated searches
-* Improved API performance
+* Improved API response times
+
+### Cache Strategy
+
+To keep the implementation simple, cache freshness is maintained through TTL expiration.
+
+In a production environment, cache invalidation would be triggered through Django signals whenever product, category, or inventory data changes.
 
 Cache TTL:
 
@@ -201,7 +208,7 @@ Cache TTL:
 
 ---
 
-### Rate Limiting
+## Rate Limiting
 
 Redis is used for IP-based rate limiting on the autocomplete endpoint.
 
@@ -227,13 +234,23 @@ Status:
 
 ---
 
-## Celery Integration
+# Celery Integration
 
 Celery is configured using Redis as the message broker.
 
-### Implemented Task
+## Asynchronous Processing Design
 
-Low Stock Alert
+The assignment suggested asynchronous workflows such as order confirmations, inventory summaries, or search preprocessing.
+
+A Low Stock Alert workflow was implemented because it represents a realistic inventory-management use case.
+
+Whenever inventory for a product falls below 10 units after order processing, a Celery task is dispatched asynchronously through Redis and executed by a background worker.
+
+This keeps order processing fast while allowing inventory monitoring to scale independently.
+
+## Implemented Task
+
+### Low Stock Alert
 
 When inventory falls below:
 
@@ -258,18 +275,21 @@ Benefits:
 * Non-blocking order processing
 * Background task execution
 * Improved scalability
+* Separation of concerns
 
 ---
 
-## API Endpoints
+# API Endpoints
 
-### Create Order
+## Create Order
+
+### Endpoint
 
 ```http
 POST /orders/
 ```
 
-Request:
+### Request
 
 ```json
 {
@@ -283,7 +303,7 @@ Request:
 }
 ```
 
-Response:
+### Successful Response
 
 ```json
 {
@@ -292,9 +312,22 @@ Response:
 }
 ```
 
+### Rejected Response
+
+If inventory is insufficient:
+
+```json
+{
+  "order_id": 25,
+  "status": "REJECTED"
+}
+```
+
 ---
 
-### Store Orders
+## Store Orders
+
+### Endpoint
 
 ```http
 GET /stores/<store_id>/orders/
@@ -308,7 +341,9 @@ Returns:
 
 ---
 
-### Store Inventory
+## Store Inventory
+
+### Endpoint
 
 ```http
 GET /stores/<store_id>/inventory/
@@ -322,51 +357,109 @@ Returns:
 
 ---
 
-### Product Search
+## Product Search
+
+### Endpoint
 
 ```http
 GET /api/search/products/
 ```
 
-Examples:
+### Examples
+
+Search by keyword:
 
 ```http
-/api/search/products/?q=laptop
+GET /api/search/products/?q=laptop
 ```
 
-```http
-/api/search/products/?category=Electronics
-```
+Filter by category:
 
 ```http
-/api/search/products/?min_price=100
+GET /api/search/products/?category=Electronics
 ```
 
-```http
-/api/search/products/?max_price=1000
-```
+Filter by minimum price:
 
 ```http
-/api/search/products/?store_id=1
+GET /api/search/products/?min_price=100
 ```
 
-```http
-/api/search/products/?in_stock=true
-```
+Filter by maximum price:
 
 ```http
-/api/search/products/?sort=price
+GET /api/search/products/?max_price=1000
+```
+
+Filter by store:
+
+```http
+GET /api/search/products/?store_id=1
+```
+
+Filter by stock availability:
+
+```http
+GET /api/search/products/?in_stock=true
+```
+
+Sort by price:
+
+```http
+GET /api/search/products/?sort=price
+```
+
+Sort by newest:
+
+```http
+GET /api/search/products/?sort=newest
 ```
 
 ---
 
-### Product Suggestions
+## Pagination
+
+Product search results are paginated using Django REST Framework.
+
+Default page size:
+
+```text
+20 items
+```
+
+Example:
+
+```http
+GET /api/search/products/?page=2
+```
+
+Response:
+
+```json
+{
+  "count": 1000,
+  "next": "http://localhost:8000/api/search/products/?page=3",
+  "previous": "http://localhost:8000/api/search/products/",
+  "results": [
+    {
+      "id": 21,
+      "title": "Gaming Laptop"
+    }
+  ]
+}
+```
+
+---
+
+## Product Suggestions
+
+### Endpoint
 
 ```http
 GET /api/search/suggest/?q=lap
 ```
 
-Response:
+### Response
 
 ```json
 {
@@ -379,7 +472,7 @@ Response:
 
 ---
 
-## Seed Data
+# Seed Data
 
 The project includes a management command for generating sample data.
 
@@ -392,6 +485,8 @@ Generated:
 6000 Inventory Records
 ```
 
+This exceeds the assignment requirement of at least 300 products per store.
+
 Run:
 
 ```bash
@@ -400,9 +495,9 @@ python manage.py seed_data
 
 ---
 
-## Running the Project
+# Running the Project
 
-### Clone Repository
+## Clone Repository
 
 ```bash
 git clone <repository-url>
@@ -411,7 +506,13 @@ cd aforro-backend
 
 ---
 
-### Create Environment File
+## Environment Configuration
+
+A `.env.example` file is included in the repository.
+
+Create a `.env` file using the provided example before starting the application.
+
+Example:
 
 ```env
 POSTGRES_DB=aforro
@@ -426,7 +527,7 @@ CELERY_BROKER_URL=redis://redis:6379/2
 
 ---
 
-### Start Services
+## Start Services
 
 ```bash
 docker compose up --build
@@ -434,7 +535,7 @@ docker compose up --build
 
 ---
 
-### Run Migrations
+## Run Migrations
 
 ```bash
 docker compose exec web python manage.py migrate
@@ -442,7 +543,7 @@ docker compose exec web python manage.py migrate
 
 ---
 
-### Create Superuser
+## Create Superuser
 
 ```bash
 docker compose exec web python manage.py createsuperuser
@@ -450,21 +551,23 @@ docker compose exec web python manage.py createsuperuser
 
 ---
 
-### Access Application
+## Access Application
+
+Django Admin:
 
 ```text
-Django Admin:
 http://localhost:8000/admin/
 ```
 
+Product Search API:
+
 ```text
-Search API:
 http://localhost:8000/api/search/products/
 ```
 
 ---
 
-## Running Tests
+# Running Tests
 
 Run all tests:
 
@@ -478,21 +581,41 @@ Current test coverage:
 7 Automated Tests
 ```
 
-Tests include:
+Covered scenarios:
 
-* Order confirmation
-* Order rejection
+* Successful order creation
+* Rejected order creation
 * Product search
-* Search caching
+* Search cache creation
 * In-stock filtering
 * Product suggestions
 * Rate limiting
 
+Example result:
+
+```text
+Found 7 test(s)
+.......
+OK
+```
+
 ---
 
-## Design Decisions
+# Scalability Considerations
 
-### PostgreSQL
+* Redis caching reduces repeated database queries for popular searches.
+* Redis-based rate limiting protects autocomplete endpoints from abuse.
+* Celery workers process background jobs independently from API requests.
+* PostgreSQL row-level locking prevents overselling during concurrent order creation.
+* Search queries use `select_related()` and aggregation to reduce query count.
+* Multiple Django API instances and Celery workers can be deployed horizontally behind a load balancer.
+* Redis provides a centralized cache and message broker across all application instances.
+
+---
+
+# Design Decisions
+
+## PostgreSQL
 
 Chosen for:
 
@@ -500,7 +623,7 @@ Chosen for:
 * Transaction support
 * Indexing capabilities
 
-### Redis
+## Redis
 
 Used for:
 
@@ -508,7 +631,7 @@ Used for:
 * Rate limiting
 * Celery message broker
 
-### Celery
+## Celery
 
 Used for:
 
@@ -516,7 +639,7 @@ Used for:
 * Low stock notifications
 * Scalable asynchronous workflows
 
-### Transaction Safety
+## Transaction Safety
 
 Order creation uses:
 
@@ -534,22 +657,23 @@ to prevent inventory race conditions during concurrent order placement.
 
 ---
 
-## Future Improvements
+# Future Improvements
 
 * JWT Authentication
 * Role-based access control
-* Inventory reservation system
-* Search ranking and relevance scoring
+* Search relevance ranking
 * Email notifications
+* Inventory reservation system
 * Monitoring and observability
 * CI/CD pipeline
 * Production deployment on AWS
 
 ---
 
-## Author
+# Author
 
-Kanishq Kumar Dhangar
+Kanishq Dhangar
 
 Backend Assignment Submission
+
 Django • PostgreSQL • Redis • Celery • Docker

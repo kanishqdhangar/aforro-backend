@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .rate_limit import is_rate_limited
-
+from rest_framework.pagination import PageNumberPagination
 class ProductSearchAPIView(APIView):
 
     def get(self, request):
@@ -29,20 +29,30 @@ class ProductSearchAPIView(APIView):
 
         queryset = self.get_queryset(request)
 
-        serializer = ProductSearchSerializer(
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+
+        page = paginator.paginate_queryset(
             queryset,
+            request
+        )
+
+        serializer = ProductSearchSerializer(
+            page,
             many=True
         )
 
-        data = serializer.data
+        response = paginator.get_paginated_response(
+            serializer.data
+        )
 
         cache.set(
             cache_key,
-            data,
+            response.data,
             timeout=300
         )
 
-        return Response(data)
+        return response
 
     def get_queryset(self, request):
 
@@ -132,6 +142,10 @@ class ProductSearchAPIView(APIView):
             )
         elif sort == "newest":
             queryset = queryset.order_by("-created_at")
+        else:
+            queryset = queryset.order_by(
+                "id"
+            )
         if in_stock == "true":
             queryset = queryset.filter(
                 available_quantity__gt=0
